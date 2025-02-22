@@ -34,3 +34,7 @@ Activate virtual environment
 
 Install requirements
 `pip install -r requirements.txt`
+
+Start Backend server
+
+`uvicorn main:app --reload`
