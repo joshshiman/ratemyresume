@@ -1,11 +1,30 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
-from database import SessionLocal, Job
-import uuid
+from supabase import create_client
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+# Initialize Supabase client
+supabase = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_KEY")
+)
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 def scrape_job_details(job_url: str):
     response = requests.get(job_url)
@@ -15,33 +34,62 @@ def scrape_job_details(job_url: str):
     title = soup.find('span', {'property': 'title'}).text.strip() if soup.find('span', {'property': 'title'}) else ''
     company = soup.find('span', {'property': 'name'}).text.strip() if soup.find('span', {'property': 'name'}) else ''
     location = soup.find('span', {'property': 'addressLocality'}).text.strip() if soup.find('span', {'property': 'addressLocality'}) else ''
-    
-    # Extract salary information
-    pay_element = soup.find('span', {'property': 'baseSalary'})
-    pay = {
-        'currency': 'CAD',
-        'min': pay_element.find('span', {'property': 'minValue'}).text.strip() if pay_element else None,
-        'max': pay_element.find('span', {'property': 'maxValue'}).text.strip() if pay_element else None,
-        'unit': pay_element.find('span', {'property': 'unitText'}).text.strip() if pay_element else None
-    } if pay_element else None
 
-    # Extract detailed job description components
-    description_sections = {}
-    for section in soup.find_all('div', {'property': True}):
-        prop = section['property']
-        if prop in ['responsibilities', 'skills', 'experienceRequirements', 'jobBenefits']:
-            section_title = section.find_previous('h3').text.strip() if section.find_previous('h3') else prop.capitalize()
-            items = [li.text.strip() for li in section.find_all('li')]
-            if not items:
-                items = [p.text.strip() for p in section.find_all('p')]
-            description_sections[section_title] = items
+    # Extract and flatten salary information
+    pay_element = soup.find('span', {'property': 'baseSalary'})
+    pay_text = ""
+    if pay_element:
+        parts = []
+        if pay_element.find('span', {'property': 'minValue'}):
+            parts.append(f"Min: {pay_element.find('span', {'property': 'minValue'}).text.strip()}")
+        if pay_element.find('span', {'property': 'maxValue'}):
+            parts.append(f"Max: {pay_element.find('span', {'property': 'maxValue'}).text.strip()}")
+        if pay_element.find('span', {'property': 'unitText'}):
+            parts.append(f"Unit: {pay_element.find('span', {'property': 'unitText'}).text.strip()}")
+        pay_text = " | ".join(parts)
+
+    # Improved description extraction
+    description_parts = []
+    main_section = soup.find('div', class_='main-job-posting-detail')
+    
+    if main_section:
+        current_section = None
+        for element in main_section.find_all(['h3', 'h4', 'div', 'ul', 'p']):
+            if element.name in ['h3', 'h4']:
+                # Start new section
+                current_section = element.text.strip()
+                description_parts.append(f"\n{current_section}:")
+            elif element.name == 'ul':
+                # List items
+                items = [li.text.strip() for li in element.find_all('li')]
+                if items:
+                    description_parts.append("\n- " + "\n- ".join(items))
+            elif element.name == 'p':
+                # Paragraph text
+                text = element.text.strip()
+                if text:
+                    description_parts.append(f"\n{text}")
+            elif element.name == 'div' and element.get('property'):
+                # Special sections
+                section_title = element.find_previous(['h3', 'h4'])
+                if section_title:
+                    section_title = section_title.text.strip()
+                    items = [li.text.strip() for li in element.find_all('li')]
+                    if not items:
+                        items = [p.text.strip() for p in element.find_all('p')]
+                    if items:
+                        description_parts.append(f"\n{section_title}:\n- " + "\n- ".join(items))
+
+    # Join all parts and clean up empty lines
+    description_text = "\n".join([p.strip() for p in description_parts if p.strip()])
 
     return {
         'title': title,
         'company': company,
         'location': location,
-        'pay': pay,
-        'description': description_sections
+        'pay': pay_text,
+        'description': description_text,
+        'source_url': job_url
     }
 
 @app.get("/scrape-jobs")
@@ -51,45 +99,42 @@ def scrape_and_save_jobs(query: str):
     response = requests.get(search_url)
     soup = BeautifulSoup(response.text, 'html.parser')
     
-    db = SessionLocal()
-    try:
-        for job_link in soup.select('a.resultJobItem'):
-            job_path = job_link['href']
-            full_url = urljoin(base_url, job_path)
-            
-            try:
-                job_data = scrape_job_details(full_url)
-                job = Job(
-                    id=str(uuid.uuid4()),
-                    **job_data
-                )
-                db.add(job)
-                db.commit()
-            except Exception as e:
-                print(f"Error processing {full_url}: {str(e)}")
-                db.rollback()
-    finally:
-        db.close()
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)  # Different port
-
-# scrape Indeed job listings (doesn't work)
-'''
-@app.get("/scrape-jobs")
-def scrape_jobs(query: str):
-    url = f"https://ca.indeed.com/jobs?q={query.replace(' ', '+')}"
-    response = requests.get(url)
-    soup = BeautifulSoup(response.text, "html.parser")
+    jobs = []
+    for job_link in soup.select('a.resultJobItem'):
+        job_path = job_link['href']
+        full_url = urljoin(base_url, job_path)
+        
+        try:
+            job_data = scrape_job_details(full_url)
+            # Insert directly to Supabase
+            supabase.table('jobs').insert(job_data).execute()
+            jobs.append(job_data)
+        except Exception as e:
+            print(f"Error processing {full_url}: {str(e)}")
+            continue
     
-    return [{
-        "title": job.select_one(".jobTitle").text.strip(),
-        "company": job.select_one(".companyName").text.strip(),
-        "description": job.select_one(".job-snippet").text.strip()
-    } for job in soup.select(".jobCard")]
+    return {
+        "message": f"Successfully added {len(jobs)} jobs",
+        "count": len(jobs)
+    }
+
+@app.get("/jobs")
+def get_jobs(page: int = 1, limit: int = 10):
+    try:
+        offset = (page - 1) * limit
+        response = supabase.table('jobs') \
+            .select("*") \
+            .range(offset, offset + limit - 1) \
+            .execute()
+        
+        return {
+            "jobs": response.data,
+            "page": page,
+            "limit": limit
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)  # Different port
-'''
+    uvicorn.run(app, host="0.0.0.0", port=8001)

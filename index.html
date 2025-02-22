@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Latest Jobs</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        .job { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+        .title { color: #1a0dab; margin: 0 0 5px 0; }
+        .company { color: #006621; font-weight: bold; }
+        .meta { color: #666; margin: 5px 0; }
+        .description { white-space: pre-line; margin-top: 10px; }
+        .pagination { margin: 20px 0; display: flex; gap: 10px; }
+        button { padding: 8px 16px; cursor: pointer; }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+    <h1>Job Listings</h1>
+    <div id="loading">Loading jobs...</div>
+    <div id="jobs"></div>
+    <div class="pagination">
+        <button id="prevBtn" onclick="changePage(-1)">Previous</button>
+        <span id="pageInfo">Page 1</span>
+        <button id="nextBtn" onclick="changePage(1)">Next</button>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const limit = 10;
+
+        async function loadJobs(page = 1) {
+            try {
+                document.getElementById('loading').textContent = 'Loading jobs...';
+                const response = await fetch(`http://localhost:8001/jobs?page=${page}&limit=${limit}`);
+                const data = await response.json();
+                
+                document.getElementById('loading').textContent = '';
+                document.getElementById('pageInfo').textContent = `Page ${page}`;
+                
+                // Clear existing jobs
+                const jobsContainer = document.getElementById('jobs');
+                jobsContainer.innerHTML = '';
+                
+                // Update jobs
+                data.jobs.forEach(job => {
+                    const jobDiv = document.createElement('div');
+                    jobDiv.className = 'job';
+                    jobDiv.innerHTML = `
+                        <h2 class="title">${job.title}</h2>
+                        <div class="company">${job.company}</div>
+                        <div class="meta">
+                            ${job.location ? `📍 ${job.location}` : ''}
+                            ${job.pay ? ` | 💰 ${job.pay}` : ''}
+                        </div>
+                        <div class="description">${job.description.replace(/\n/g, '\n')}</div>
+                    `;
+                    jobsContainer.appendChild(jobDiv);
+                });
+
+                // Update button states
+                document.getElementById('prevBtn').disabled = page === 1;
+                document.getElementById('nextBtn').disabled = data.jobs.length < limit;
+                
+            } catch (error) {
+                document.getElementById('loading').textContent = 
+                    'Failed to load jobs. Please check the console for details.';
+                console.error('Error:', error);
+            }
+        }
+
+        function changePage(offset) {
+            currentPage += offset;
+            loadJobs(currentPage);
+        }
+
+        // Load initial page
+        loadJobs(currentPage);
+    </script>
+</body>
+</html>
