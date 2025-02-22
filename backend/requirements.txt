@@ -5,3 +5,4 @@ langchain
 langchain-ollama
 playwright
 ollama
+beautifulsoup4

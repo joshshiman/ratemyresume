@@ -1,0 +1,7 @@
+# Test Resume Service
+curl -X POST "http://localhost:8000/tailor-resume" \
+-H "Content-Type: application/json" \
+-d '{"job_description": "Python developer", "resume_bullet": "Wrote code"}'
+
+# Test Scraper Service
+curl "http://localhost:8001/scrape-jobs?query=engineer"
