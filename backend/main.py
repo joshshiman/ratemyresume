@@ -1,7 +1,7 @@
 # main.py
 from fastapi import FastAPI
 from pydantic import BaseModel
-from langchain_community.llms import Ollama
+from langchain.llms import Ollama
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 

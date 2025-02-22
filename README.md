@@ -1,5 +1,6 @@
 # ratemyresume
 Helping International Student Stay Competitive
+> By: Joshua, Derica, Nikita, and Victoria
 
 ## How to Setup
 
