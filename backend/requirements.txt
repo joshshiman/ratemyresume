@@ -1,6 +1,7 @@
 fastapi 
 uvicorn 
 sqlalchemy 
-langchain 
+langchain
+langchain-ollama
 playwright
 ollama

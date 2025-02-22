@@ -1,14 +1,14 @@
 # main.py
 from fastapi import FastAPI
 from pydantic import BaseModel
-from langchain.llms import Ollama
+from langchain_ollama import OllamaLLM
 from langchain.prompts import PromptTemplate
 from langchain.chains import LLMChain
 
 app = FastAPI()
 
 # Configure Ollama - connects to localhost:11434
-llm = Ollama(base_url="http://localhost:11434", model="tinyllama:latest")
+llm = OllamaLLM(base_url="http://localhost:11434", model="tinyllama:latest")
 
 class TailorRequest(BaseModel):
     job_description: str
