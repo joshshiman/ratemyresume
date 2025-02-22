@@ -38,5 +38,6 @@ Activate virtual environment
 Install requirements
 `pip install -r requirements.txt`
 
-Ensure `beautifulsoup4` is installed
-`pip install beautifulsoup4`
+Start Backend server
+
+`uvicorn main:app --reload`
