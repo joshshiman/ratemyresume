@@ -24,6 +24,14 @@ Navigate to Backend folder
 
 `cd backend`
 
+Create .env file
+
+`touch .env`
+
+Add Google Gemini API key (Obtained from website)
+
+`GOOGLE_API_KEY=[INSERT YOUR KEY HERE]`
+
 Setting up virtual environment
 
 `python -m venv .venv`

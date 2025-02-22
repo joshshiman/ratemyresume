@@ -1,7 +1,5 @@
 fastapi 
 uvicorn 
 sqlalchemy 
-langchain
-langchain-ollama
-ollama
+python-dotenv
 beautifulsoup4

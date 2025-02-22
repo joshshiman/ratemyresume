@@ -1,35 +1,33 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
-from langchain_community.llms import Ollama
-from langchain.prompts import PromptTemplate
-from langchain.chains import LLMChain
+from dotenv import load_dotenv
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
 
 app = FastAPI()
 
-# Configuration
-LLM = Ollama(base_url="http://localhost:11434", model="tinyllama")
+# Gemini configuration
+load_dotenv()
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel('gemini-2.0-flash')
 
+
+# Tailor Resume
 class TailorRequest(BaseModel):
     job_description: str
     resume_bullet: str
 
 @app.post("/tailor-resume")
 def tailor_resume(request: TailorRequest):
-    prompt = PromptTemplate.from_template("""
-    [INST] Improve this resume bullet for job requirements:
-    {job_desc}
+    prompt = f"""Be concise and do not include unnecessary text or formatting or bullets. Concisely provide a single tailored resume bullet point based on the provided original bullet to be more relevant to the job requirements provided. 
+
+    Job Requirements: {request.job_description}
+    Original Bullet: {request.resume_bullet}"""
     
-    Original: {bullet}
-    Revised: [/INST]
-    """)
+    response = model.generate_content(prompt)
     
-    return {"tailored_bullet": LLMChain(
-        llm=LLM,
-        prompt=prompt
-    ).invoke({
-        "job_desc": request.job_description,
-        "bullet": request.resume_bullet
-    })["text"]}
+    return {"tailored_bullet": response.text}
 
 if __name__ == "__main__":
     import uvicorn
