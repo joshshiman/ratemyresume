@@ -43,7 +43,7 @@ Activate virtual environment
 - On Windows:
   `.venv\Scripts\activate.bat`
 
-Install requirements
+Install requirements (must have PosgreSQL installed)
 `pip install -r requirements.txt`
 
 Start Backend server

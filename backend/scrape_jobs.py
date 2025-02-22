@@ -2,6 +2,8 @@ from fastapi import FastAPI
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
+from database import SessionLocal, Job
+import uuid
 
 app = FastAPI()
 
@@ -43,25 +45,31 @@ def scrape_job_details(job_url: str):
     }
 
 @app.get("/scrape-jobs")
-def scrape_jobs(query: str):
+def scrape_and_save_jobs(query: str):
     base_url = "https://www.jobbank.gc.ca"
     search_url = f"{base_url}/jobsearch/jobsearch?searchstring={query.replace(' ', '+')}"
     response = requests.get(search_url)
     soup = BeautifulSoup(response.text, 'html.parser')
     
-    jobs = []
-    for job_link in soup.select('a.resultJobItem'):
-        job_path = job_link['href']
-        full_url = urljoin(base_url, job_path)
-        
-        try:
-            job_details = scrape_job_details(full_url)
-            jobs.append(job_details)
-        except Exception as e:
-            print(f"Error scraping {full_url}: {str(e)}")
-            continue
+    db = SessionLocal()
+    try:
+        for job_link in soup.select('a.resultJobItem'):
+            job_path = job_link['href']
+            full_url = urljoin(base_url, job_path)
             
-    return jobs
+            try:
+                job_data = scrape_job_details(full_url)
+                job = Job(
+                    id=str(uuid.uuid4()),
+                    **job_data
+                )
+                db.add(job)
+                db.commit()
+            except Exception as e:
+                print(f"Error processing {full_url}: {str(e)}")
+                db.rollback()
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     import uvicorn
