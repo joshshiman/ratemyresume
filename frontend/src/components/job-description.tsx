@@ -6,11 +6,11 @@ interface JobDescriptionProps {
 export default function JobDescription({ jobData, onFetch }: JobDescriptionProps) {
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b p-4">
+      <div className="border-b p-4 flex justify-between items-center">
         <h2 className="text-lg font-semibold">Job Description</h2>
         <button
           onClick={onFetch}
-          className="mt-2 rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
+          className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90"
         >
           Fetch Job
         </button>
