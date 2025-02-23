@@ -6,6 +6,15 @@ from urllib.parse import urljoin
 from supabase import create_client
 import os
 from dotenv import load_dotenv
+from conductor.client.worker.worker_task import worker_task
+
+@worker_task(task_definition_name='scrape_task')
+def scrape(url: str) -> dict:
+    response = requests.get(f'http://localhost:5000/scrape?url={url}')
+    if response.status_code == 200:
+        return response.json()  # Return the JSON response from the scraper service
+    else:
+        return {"error": "Failed to scrape the page"}
 
 load_dotenv()
 
@@ -95,7 +104,10 @@ def scrape_job_details(job_url: str):
 @app.get("/scrape-jobs")
 def scrape_and_save_jobs(query: str):
     base_url = "https://www.jobbank.gc.ca"
+    # Ensure spaces in the query are replaced with '+' to fit URL encoding
     search_url = f"{base_url}/jobsearch/jobsearch?searchstring={query.replace(' ', '+')}"
+    
+    # Perform GET request to scrape job listings
     response = requests.get(search_url)
     soup = BeautifulSoup(response.text, 'html.parser')
     
@@ -106,7 +118,7 @@ def scrape_and_save_jobs(query: str):
         
         try:
             job_data = scrape_job_details(full_url)
-            # Insert directly to Supabase
+            # Insert job details directly to Supabase
             supabase.table('jobs').insert(job_data).execute()
             jobs.append(job_data)
         except Exception as e:
@@ -117,6 +129,7 @@ def scrape_and_save_jobs(query: str):
         "message": f"Successfully added {len(jobs)} jobs",
         "count": len(jobs)
     }
+
 
 @app.get("/jobs")
 def get_jobs(page: int = 1, limit: int = 10):
@@ -137,4 +150,4 @@ def get_jobs(page: int = 1, limit: int = 10):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8001)
+    uvicorn.run(app, host="0.0.0.0", port=8002)  # Changed port to 8002
