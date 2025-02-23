@@ -1,7 +1,8 @@
-fastapi 
-uvicorn 
-supabase
-python-dotenv
+fastapi
+uvicorn
+requests
 beautifulsoup4
-google.generativeai
+supabase
+google-generativeai
+python-dotenv
 psycopg2-binary
