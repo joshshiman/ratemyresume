@@ -1,9 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import JobDescription from "./components/job-description"
-import Resume from "./components/resume"
-import ChatInterface from "./components/chat-interface"
+import JobDescription from "@/components/job-description"
+import Resume from "@/components/resume"
+import ChatInterface from "@/components/chat-interface"
 
 export default function ResumeTailoring() {
   const [jobData, setJobData] = useState<any>(null)
@@ -20,15 +20,15 @@ export default function ResumeTailoring() {
   }
 
   return (
-    <div className="h-screen bg-background">
+    <div className="h-screen bg-background overflow-hidden">
       <div className="grid h-full grid-cols-1 gap-4 p-4 md:grid-cols-3">
-        <div className="rounded-lg border bg-card shadow-sm">
+        <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
           <JobDescription jobData={jobData} onFetch={fetchJob} />
         </div>
-        <div className="rounded-lg border bg-card shadow-sm">
+        <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
           <Resume onTextSelect={setSelectedText} />
         </div>
-        <div className="rounded-lg border bg-card shadow-sm">
+        <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
           <ChatInterface selectedText={selectedText} jobDescription={jobData?.description || ""} />
         </div>
       </div>
