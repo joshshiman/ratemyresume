@@ -40,7 +40,6 @@ export default function Resume({ onTextSelect }: ResumeProps) {
                   </li>
                 </ul>
               </div>
-              {/* New experience entry */}
               <div>
                 <h3 className="font-medium">Software Engineer - Innovate Solutions</h3>
                 <p className="text-sm text-muted-foreground">2018 - 2020</p>
@@ -50,6 +49,18 @@ export default function Resume({ onTextSelect }: ResumeProps) {
                   <li>Optimized PostgreSQL queries reducing page load times by 30%</li>
                   <li>Collaborated with product teams to implement user-facing features</li>
                   <li>Improved application performance through caching strategies</li>
+                </ul>
+              </div>
+              {/* New Technical PM Experience */}
+              <div>
+                <h3 className="font-medium">Technical Project Manager - TechFlow Systems</h3>
+                <p className="text-sm text-muted-foreground">2016 - 2018</p>
+                <ul className="mt-2 list-disc pl-5 text-sm">
+                  <li>Led cross-functional teams in delivering 15+ tech projects on time and under budget</li>
+                  <li>Managed Agile Scrum processes using Jira and Confluence for team of 12 developers</li>
+                  <li>Coordinated between engineering, design, and stakeholders to define product roadmaps</li>
+                  <li>Conducted risk analysis that reduced project delays by 25% through proactive mitigation</li>
+                  <li>Oversaw $500k+ cloud migration project improving system reliability by 40%</li>
                 </ul>
               </div>
             </div>
