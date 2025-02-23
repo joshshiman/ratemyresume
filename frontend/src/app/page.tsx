@@ -11,7 +11,7 @@ export default function ResumeTailoring() {
 
   const fetchJob = async () => {
     try {
-      const response = await fetch("http://34.130.198.88:8001/jobs?limit=1")
+      const response = await fetch("http://34.130.198.88:8001/jobs?limit=1&page=98")
       const data = await response.json()
       setJobData(data.jobs[0])
     } catch (error) {
@@ -23,13 +23,13 @@ export default function ResumeTailoring() {
     <div className="h-screen bg-background overflow-hidden">
       <div className="grid h-full grid-cols-1 gap-4 p-4 md:grid-cols-3">
         <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
-          <JobDescription jobData={jobData} onFetch={fetchJob} />
+          <ChatInterface selectedText={selectedText} jobDescription={jobData?.description || ""} />
         </div>
         <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
           <Resume onTextSelect={setSelectedText} />
         </div>
         <div className="rounded-lg border bg-card shadow-sm overflow-hidden">
-          <ChatInterface selectedText={selectedText} jobDescription={jobData?.description || ""} />
+          <JobDescription jobData={jobData} onFetch={fetchJob} />
         </div>
       </div>
     </div>

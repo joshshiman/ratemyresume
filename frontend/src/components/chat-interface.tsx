@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
@@ -37,30 +38,30 @@ export default function ChatInterface({ selectedText, jobDescription }: ChatInte
 
       const response = await fetch("http://34.130.198.88:8000/tailor-resume", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Origin: window.location.origin, // Add this line
+        },
         body: JSON.stringify({
           job_description: jobDescription,
           resume_bullet: inputText,
         }),
+        mode: "cors", // Add this line
+        credentials: "same-origin", // Add this line
         signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-      
+      })
+
+      clearTimeout(timeoutId)
+
       if (!response.ok) {
-        const errorBody = await response.text();
-        throw new Error(`HTTP ${response.status}: ${errorBody}`);
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
-      
-      const data = await response.json();
-      if (!data.tailored_bullet) {
-        throw new Error("Response missing tailored_bullet");
-      }
-      
+
+      const data = await response.json()
       const responseMessage: Message = {
         text: data.tailored_bullet,
         type: "response",
-      };
+      }
 
       setMessages((prev) => [...prev, responseMessage])
     } catch (error) {
@@ -81,8 +82,8 @@ export default function ChatInterface({ selectedText, jobDescription }: ChatInte
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b p-4">
-        <h2 className="text-lg font-semibold">Resume Tailor</h2>
+      <div className="border-b p-4 flex items-center justify-center">
+        <Image src="/ratemyresume.svg" alt="RatemyResume Logo" width={200} height={50} priority />
       </div>
       <div className="flex-1 overflow-y-auto p-4">
         <div className="space-y-4">
