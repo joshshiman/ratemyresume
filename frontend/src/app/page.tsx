@@ -11,7 +11,7 @@ export default function ResumeTailoring() {
 
   const fetchJob = async () => {
     try {
-      const response = await fetch("https://34.130.198.88:8001/jobs?limit=1&page=98")
+      const response = await fetch("http://34.130.198.88:8001/jobs?limit=1&page=98")
       const data = await response.json()
       setJobData(data.jobs[0])
     } catch (error) {

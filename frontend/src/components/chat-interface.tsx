@@ -36,7 +36,7 @@ export default function ChatInterface({ selectedText, jobDescription }: ChatInte
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 60000) // 60 second timeout
 
-      const response = await fetch("https://34.130.198.88:8000/tailor-resume", {
+      const response = await fetch("http://34.130.198.88:8000/tailor-resume", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
