@@ -6,18 +6,26 @@ import Resume from "@/components/resume"
 import ChatInterface from "@/components/chat-interface"
 
 export default function ResumeTailoring() {
-  const [jobData, setJobData] = useState<any>(null)
-  const [selectedText, setSelectedText] = useState("")
+  const [jobData, setJobData] = useState<any>(null);
+  const [selectedText, setSelectedText] = useState("");
+  const [page, setPage] = useState(1); // Track the current page number
 
   const fetchJob = async () => {
     try {
-      const response = await fetch("http://localhost:8000/jobs?limit=1")
-      const data = await response.json()
-      setJobData(data.jobs[0])
+      // Fetch jobs for the current page
+      const response = await fetch(`http://localhost:8000/jobs?page=${page}&limit=1`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      const data = await response.json();
+      setJobData(data.jobs[0]); // Set the fetched job data
+
+      // Increment the page number for the next fetch
+      setPage((prevPage) => prevPage + 1);
     } catch (error) {
-      console.error("Error fetching job:", error)
+      console.error("Error fetching job:", error);
     }
-  }
+  };
 
   return (
     <div className="h-screen bg-background overflow-hidden">
