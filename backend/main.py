@@ -1,14 +1,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from supabase import create_client
 import os
 from dotenv import load_dotenv
+import google.generativeai as genai
 
+# Load environment variables
 load_dotenv()
-
 
 # Initialize Supabase client
 supabase = create_client(
@@ -16,16 +18,23 @@ supabase = create_client(
     os.getenv("SUPABASE_KEY")
 )
 
+# Initialize FastAPI app
 app = FastAPI()
 
+# Configure CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["ratemyresu.me","http://localhost:3000"],  # Allows all origins
+    allow_origins=["https://ratemyresu.me", "http://localhost:3000"],  # Allows all origins
     allow_credentials=True,
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
 
+# Gemini configuration
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel('gemini-2.0-flash')
+
+# Function to scrape job details
 def scrape_job_details(job_url: str):
     response = requests.get(job_url)
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -92,6 +101,7 @@ def scrape_job_details(job_url: str):
         'source_url': job_url
     }
 
+# Route to scrape and save jobs
 @app.get("/scrape-jobs")
 def scrape_and_save_jobs(query: str):
     base_url = "https://www.jobbank.gc.ca"
@@ -121,9 +131,9 @@ def scrape_and_save_jobs(query: str):
         "count": len(jobs)
     }
 
-
+# Route to get jobs
 @app.get("/jobs")
-def get_jobs(page: int = 1, limit: int = 10):
+def get_jobs(page: int = 1, limit: int = 1):
     try:
         offset = (page - 1) * limit
         response = supabase.table('jobs') \
@@ -139,6 +149,24 @@ def get_jobs(page: int = 1, limit: int = 10):
     except Exception as e:
         return {"error": str(e)}
 
+# Tailor Resume request model
+class TailorRequest(BaseModel):
+    job_description: str
+    resume_bullet: str
+
+# Route to tailor resume
+@app.post("/tailor-resume")
+def tailor_resume(request: TailorRequest):
+    prompt = f"""Be concise and do not include unnecessary text or formatting or bullets. Concisely provide a single tailored resume bullet point based on the provided original bullet to be more relevant to the job requirements provided. 
+
+    Job Requirements: {request.job_description}
+    Original Bullet: {request.resume_bullet}"""
+    
+    response = model.generate_content(prompt)
+    
+    return {"tailored_bullet": response.text}
+
+# Run the application
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8002)  # Changed port to 8002
+    uvicorn.run(app, host="0.0.0.0", port=8000)
