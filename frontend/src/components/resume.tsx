@@ -1,19 +1,37 @@
 interface ResumeProps {
-  onTextSelect: (text: string) => void
+  onTextSelect: (text: string) => void;
 }
 
 export default function Resume({ onTextSelect }: ResumeProps) {
   const handleTextSelection = () => {
-    const selection = window.getSelection()
+    const selection = window.getSelection();
     if (selection && selection.toString()) {
-      onTextSelect(selection.toString())
+      onTextSelect(selection.toString());
     }
-  }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Handle the file upload logic here
+      console.log("Uploaded file:", file.name);
+      // You can add logic to read the file, parse it, and update the resume content
+    }
+  };
 
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b p-4">
+      <div className="border-b p-4 flex justify-between items-center">
         <h2 className="text-lg font-semibold">Resume</h2>
+        <label className="rounded-md bg-primary px-4 py-2 text-sm text-primary-foreground hover:bg-primary/90 cursor-pointer">
+          Upload Resume
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+        </label>
       </div>
       <div className="flex-1 overflow-y-auto p-4" onMouseUp={handleTextSelection}>
         <div className="space-y-6">
@@ -35,7 +53,7 @@ export default function Resume({ onTextSelect }: ResumeProps) {
                   <li>Implemented CI/CD pipeline reducing deployment time by 60%</li>
                   <li>Mentored junior developers and conducted code reviews</li>
                   <li>
-                    Scripted unique test plans, test scripts and processes to remove previously know redundancy by 40%
+                    Scripted unique test plans, test scripts and processes to remove previously known redundancy by 40%
                     and ensured predictable outcomes
                   </li>
                 </ul>
@@ -76,5 +94,5 @@ export default function Resume({ onTextSelect }: ResumeProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }

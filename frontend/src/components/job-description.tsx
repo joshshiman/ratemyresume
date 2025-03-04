@@ -21,13 +21,13 @@ export default function JobDescription({ jobData, onFetch }: JobDescriptionProps
             <h3 className="text-xl font-bold">{jobData.title}</h3>
             <div className="space-y-2">
               <p>
-                <strong>Company:</strong> {jobData.company}
+                <strong>💼 Company:</strong> {jobData.company}
               </p>
               <p>
-                <strong>Location:</strong> {jobData.location}
+                <strong>📍 Location:</strong> {jobData.location}
               </p>
               <p>
-                <strong>Pay:</strong> {jobData.pay}
+                <strong>💰 Pay:</strong> {jobData.pay}
               </p>
             </div>
             <div className="whitespace-pre-wrap">{jobData.description}</div>
